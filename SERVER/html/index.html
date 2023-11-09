@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <title>IOT control panel</title>
+  </head>
+  <body class="bg-secondary">
+    <nav class="navbar navbar-expand-sm bg-secondary navbar-dark">
+      <div class="container-fluid">
+        <ul class="navbar-nav">
+          <li class="nav-item">
+            <a class="nav-link active" href="">Home</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="./database.php">Database</a>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <div class="container-fluid p-5 bg-dark text-white text-center">
+      <h1>IoT Control Panel</h1>
+      <p>Here you can control the light.</p>
+    </div>
+
+    <br />
+    <br />
+
+    <div class="btn-group d-flex justify-content-around">
+      <button type="button" class="btn btn-warning">Turn on light</button>
+      <button type="button" class="btn btn-danger">Turn off light</button>
+    </div>
+
+    <br />
+    <br />
+
+    <div class="d-flex justify-content-center">
+      <div class="toast show">
+        <div class="toast-header">
+          Light state changed
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="toast"
+          ></button>
+        </div>
+        <div class="toast-body">Light turned on!</div>
+        <div class="toast-body">Light turned off!</div>
+      </div>
+    </div>
+  </body>
+</html>
