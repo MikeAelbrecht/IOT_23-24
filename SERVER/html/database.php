@@ -38,24 +38,23 @@
           </tr>
         </thead>
         <tbody>
-            <?php
-              require __DIR__ . '../DATABASE/database.php'
-              while ($row = mysqli_fetch_assoc(get_data())) {
-                
-              }
-            ?>
+          <!-- for loop 
           <tr>
-            <td>09/11/2023</td>
-            <td>21:31</td>
+            <td>Date</td>
+            <td>timestamp</td>
           </tr>
-          <tr>
-            <td>09/11/2023</td>
-            <td>21:32</td>
-          </tr>
-          <tr>
-            <td>09/11/2023</td>
-            <td>21:35</td>
-          </tr>
+          -->
+          <?php
+          require_once("database.php");
+          foreach (get_data() as $row)
+          {
+              echo "<tr>";
+              echo "<td>" . $row["datum"] . "</td>";
+              echo "<td>" . $row["tijd"] . "</td>";
+              echo "</tr>";
+          }
+          ?>
+
         </tbody>
       </table>
     </div>

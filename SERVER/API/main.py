@@ -1,32 +1,30 @@
-# File of the webserver
-# The webserver will list the database entries
-# In the CMD run python3 -m uvicorn SERVER.API.main:app --reload (from the IOT_2023 folder)
+import socket
 
-import subprocess
-from typing import Union
+# Create a socket object
+server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-try:
-    from fastapi import FastAPI, Request
-except ModuleNotFoundError:
-    subprocess.run(["pip", "install", "fastapi"])
-    from fastapi import FastAPI, Request
+# Bind the socket to a specific address and port
+server_address = ("localhost", 3000)
+server_socket.bind(server_address)
 
-from fastapi.responses import HTMLResponse
-from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
+# Listen for incoming connections
+server_socket.listen(1)
 
+print("Server is listening on port 3000...")
 
-app = FastAPI()
-# app.mount("/static", StaticFiles(directory="static"), name="static")
+while True:
+    # Wait for a connection
+    client_socket, client_address = server_socket.accept()
 
-templates = Jinja2Templates(directory="templates")
+    # Receive data from the client
+    data = client_socket.recv(1024).decode("utf-8")
 
+    # Process the received data
+    print("Received data:", data)
 
-@app.get("/", response_class=HTMLResponse)
-async def read_root(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+    # Send a response back to the client
+    response = "Hello from the server!"
+    client_socket.sendall(response.encode("utf-8"))
 
-
-@app.get("/items/{item_id}")
-async def read_item(item_id: int, q: Union[str, None] = None):
-    return {"item_id": item_id, "q": q}
+    # Close the connection
+    client_socket.close()

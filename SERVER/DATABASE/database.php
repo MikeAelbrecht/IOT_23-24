@@ -24,5 +24,4 @@ function get_data()
     return NULL;
 }
 
-
 ?>

@@ -7,6 +7,7 @@
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
       rel="stylesheet"
     />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <title>IOT control panel</title>
   </head>
@@ -33,26 +34,62 @@
     <br />
 
     <div class="btn-group d-flex justify-content-around">
-      <button type="button" class="btn btn-warning">Turn on light</button>
-      <button type="button" class="btn btn-danger">Turn off light</button>
+      <button type="button" class="btn btn-warning" id="turnOnLight" onclick="turnOnLightFunction()">Turn on light</button>
+      <button type="button" class="btn btn-danger" id="turnOffLight" onclick="turnOffLightFunction()">Turn off light</button>
     </div>
 
     <br />
     <br />
 
     <div class="d-flex justify-content-center">
-      <div class="toast show">
-        <div class="toast-header">
-          Light state changed
-          <button
-            type="button"
-            class="btn-close"
-            data-bs-dismiss="toast"
-          ></button>
-        </div>
-        <div class="toast-body">Light turned on!</div>
-        <div class="toast-body">Light turned off!</div>
-      </div>
+      <h1 class="l-4 display-1"><i class="bi-lamp"></i></h1>
     </div>
+    
   </body>
 </html>
+
+<script>
+  function turnOnLightFunction() {
+    fetch('http://localhost:3000/turnOnLight')
+      .then(response => response.json())
+      .then(data => {
+        console.log(data);
+        var lampIcon = document.querySelector('.bi-lamp');
+        if (lampIcon) {
+          lampIcon.classList.remove('bi-lamp');
+          lampIcon.classList.add('bi-lamp-fill');
+        }
+      })
+      .catch((error) => {
+        console.error('Error:', error);
+      });
+    
+      var lampIcon = document.querySelector('.bi-lamp');
+      if (lampIcon) {
+        lampIcon.classList.remove('bi-lamp');
+        lampIcon.classList.add('bi-lamp-fill');
+      }
+  }
+
+  function turnOffLightFunction() {
+    fetch('http://localhost:3000/turnOnLight')
+      .then(response => response.json())
+      .then(data => {
+        console.log(data);
+        var lampIcon = document.querySelector('.bi-lamp');
+        if (lampIcon) {
+          lampIcon.classList.remove('bi-lamp');
+          lampIcon.classList.add('bi-lamp-fill');
+        }
+      })
+      .catch((error) => {
+        console.error('Error:', error);
+      });
+      
+      var lampIcon = document.querySelector('.bi-lamp-fill');
+      if (lampIcon) {
+        lampIcon.classList.remove('bi-lamp-fill');
+        lampIcon.classList.add('bi-lamp');
+      }
+  }
+  </script>
