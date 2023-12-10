@@ -54,6 +54,8 @@ void setup() {
 
   digitalWrite(LED_R, HIGH);
 
+  payload.message[6] = 0;
+
   // Setup 
   if (!radio.begin()) {
     Serial.println(F("radio hardware is not responding!!"));
@@ -74,6 +76,43 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
+  if (isMotionDetected()) {
+    digitalWrite(LED_B, HIGH);
+
+    memcpy(payload.message, "Motion", 6);
+    radio.stopListening(); 
+
+    bool report = radio.write(&payload, sizeof(payload));
+
+    if (report) {
+      radio.startListening();
+    }
+    else {
+      bool report = false;
+
+      while (!report) {
+        report = radio.write(&payload, sizeof(payload));
+        delay(500);
+      }
+
+      radio.startListening();
+    }
+  }
+
+  if (radio.available()) {
+    PayloadStruct received;
+
+    radio.read(&received, sizeof(received));
+    payload.counter = received.counter + 1;
+
+    radio.stopListening();
+
+    memcpy(payload.message, "Receiv", 6); 
+    radio.writeFast(&payload, sizeof(payload));
+    radio.txStandBy(150);
+
+    radio.startListening();
+  }
 }
 
 bool isMotionDetected() {
