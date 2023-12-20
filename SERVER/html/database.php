@@ -45,7 +45,7 @@
           </tr>
           -->
           <?php
-          require_once("database.php");
+          require_once("../DATABASE/database.php");
           foreach (get_data() as $row)
           {
               echo "<tr>";

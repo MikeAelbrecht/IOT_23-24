@@ -6,6 +6,8 @@ $dbname = "iot";
 
 function get_data()
 {
+    global $servername, $username, $pass, $dbname;
+
     $conn = mysqli_connect($servername, $username, $pass, $dbname);
 
     if (!$conn)
