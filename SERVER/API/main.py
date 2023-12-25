@@ -1,14 +1,20 @@
 import socket
+import ssl
 
 # Create a socket object
-server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 # Bind the socket to a specific address and port
-server_address = ("localhost", 3000)
-server_socket.bind(server_address)
+server_address = ('localhost', 3000)
+sock.bind(server_address)
 
 # Listen for incoming connections
-server_socket.listen(1)
+sock.listen(1)
+
+# Wrap the socket with SSL
+context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+context.load_cert_chain(certfile='path/to/your/certificate.pem', keyfile='path/to/your/private.key')
+server_socket = context.wrap_socket(sock, server_side=True)
 
 print("Server is listening on port 3000...")
 
