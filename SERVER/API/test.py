@@ -1,5 +1,6 @@
+# https://github.com/bjarne-hansen/py-nrf24/blob/master/test/simple-sender.py
+
 import socket
-import ssl
 
 def handle_data(data) -> None:
     print("Received data:", data)
@@ -22,13 +23,6 @@ print("Server is listening on port 3000...")
 while True:
     # Wait for a connection
     client_socket, client_address = sock.accept()
-    client_socket = ssl.wrap_socket(
-        client_socket, 
-	    keyfile='/home/pi/ssl-cert-snakeoil.key', 
-	    certfile='/home/pi/ssl-cert-snakeoil.pem',
-	    server_side=True,
-	    cert_reqs=ssl.CERT_NONE
-    )
 
     # Receive data from the client
     data = client_socket.recv(1024).decode("utf-8")
