@@ -67,8 +67,9 @@ def receive_data() -> None:
                 f"{now:%Y-%m-%d %H:%M:%S.%f}: pipe: {pipe}, len: {len(payload)}, bytes: {hex}"
             )
 
-            values = struct.unpack("<Bff", payload)
-            print(f"Protocol: {values[0]}, data: {values[0]}")
+            if len(payload) > 0:
+                values = struct.unpack("<Bff", payload)
+                print(f"Protocol: {values[0]}, data: {values[0]}")
 
             # Sleep 100 ms.
             time.sleep(0.1)
