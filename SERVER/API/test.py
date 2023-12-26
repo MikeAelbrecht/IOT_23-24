@@ -1,5 +1,6 @@
 # https://github.com/bjarne-hansen/py-nrf24/blob/master/test/simple-sender.py
 
+import datetime
 import socket
 
 import struct
@@ -52,22 +53,25 @@ def receive_data() -> None:
     try:
         print(f"Receive from {address}")
 
-        nrf.reset_packages_lost()
-        nrf.start_listening()
-        try:
-            nrf.wait_for_data()
-        except TimeoutError:
-            print("Timeout waiting for transmission to complete.")
+        while nrf.data_ready:
+            now = datetime.now()
 
-        if nrf.get_packages_lost() == 0:
+            # Read pipe and payload for message.
+            pipe = nrf.data_pipe()
+            payload = nrf.get_payload()
+
+            hex = ":".join(f"{i:02x}" for i in payload)
+
+            # Show message received as hex.
             print(
-                f"Success: lost={nrf.get_packages_lost()}, retries={nrf.get_retries()}"
+                f"{now:%Y-%m-%d %H:%M:%S.%f}: pipe: {pipe}, len: {len(payload)}, bytes: {hex}"
             )
-        else:
-            print(f"Error: lost={nrf.get_packages_lost()}, retries={nrf.get_retries()}")
 
-        payload = nrf.read()
-        print(payload)
+            values = struct.unpack("<Bff", payload)
+            print(f"Protocol: {values[0]}, data: {values[0]}")
+
+            # Sleep 100 ms.
+            time.sleep(0.1)
 
     except:
         traceback.print_exc()
