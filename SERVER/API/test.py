@@ -26,31 +26,49 @@ def send_data(data: int) -> None:
     try:
         print(f"Send to {address}")
 
-        while True:
-            payload = struct.pack("<Bff", 0x01, data)
+        payload = struct.pack("<Bff", 0x01, data)
 
-            # Send the payload to the address specified above.
-            nrf.reset_packages_lost()
-            nrf.send(payload)
-            try:
-                nrf.wait_until_sent()
-            except TimeoutError:
-                print("Timeout waiting for transmission to complete.")
-                # Wait 10 seconds before sending the next reading.
-                time.sleep(10)
-                continue
+        nrf.reset_packages_lost()
+        nrf.send(payload)
+        try:
+            nrf.wait_until_sent()
+        except TimeoutError:
+            print("Timeout waiting for transmission to complete.")
 
-            if nrf.get_packages_lost() == 0:
-                print(
-                    f"Success: lost={nrf.get_packages_lost()}, retries={nrf.get_retries()}"
-                )
-            else:
-                print(
-                    f"Error: lost={nrf.get_packages_lost()}, retries={nrf.get_retries()}"
-                )
+        if nrf.get_packages_lost() == 0:
+            print(
+                f"Success: lost={nrf.get_packages_lost()}, retries={nrf.get_retries()}"
+            )
+        else:
+            print(f"Error: lost={nrf.get_packages_lost()}, retries={nrf.get_retries()}")
 
-            # Wait 10 seconds before sending the next reading.
-            time.sleep(10)
+    except:
+        traceback.print_exc()
+        nrf.power_down()
+        pi.stop()
+
+
+def receive_data() -> None:
+    try:
+        print(f"Receive from {address}")
+
+        nrf.reset_packages_lost()
+        nrf.start_listening()
+        try:
+            nrf.wait_for_data()
+        except TimeoutError:
+            print("Timeout waiting for transmission to complete.")
+
+        if nrf.get_packages_lost() == 0:
+            print(
+                f"Success: lost={nrf.get_packages_lost()}, retries={nrf.get_retries()}"
+            )
+        else:
+            print(f"Error: lost={nrf.get_packages_lost()}, retries={nrf.get_retries()}")
+
+        payload = nrf.read()
+        print(payload)
+
     except:
         traceback.print_exc()
         nrf.power_down()
@@ -79,6 +97,7 @@ if __name__ == "__main__":
     )
     nrf.set_address_bytes(len(address))
     nrf.open_writing_pipe(address)
+    nrf.open_reading_pipe(RF24_RX_ADDR.P1, address)
 
     # Display the content of NRF24L01 device registers.
     nrf.show_registers()
@@ -91,6 +110,7 @@ if __name__ == "__main__":
     sock.bind(server_address)
 
     sock.listen(1)
+    sock.setblocking(False)
 
     print("Server is listening on port 3000...")
 
