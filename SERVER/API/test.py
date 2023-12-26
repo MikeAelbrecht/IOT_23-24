@@ -99,7 +99,6 @@ if __name__ == "__main__":
     nrf.open_writing_pipe(address)
     nrf.open_reading_pipe(RF24_RX_ADDR.P1, address)
 
-    # Display the content of NRF24L01 device registers.
     nrf.show_registers()
 
     # ---- Setup API ----
@@ -115,13 +114,18 @@ if __name__ == "__main__":
     print("Server is listening on port 3000...")
 
     while True:
-        client_socket, client_address = sock.accept()
+        try:
+            client_socket, client_address = sock.accept()
 
-        data = client_socket.recv(1024).decode("utf-8")
+            data = client_socket.recv(1024).decode("utf-8")
 
-        handle_data(data)
+            handle_data(data)
 
-        response = "Hello from the server!"
-        client_socket.sendall(response.encode("utf-8"))
+            response = "Hello from the server!"
+            client_socket.sendall(response.encode("utf-8"))
 
-        client_socket.close()
+            client_socket.close()
+        except BlockingIOError:
+            pass
+
+        receive_data()
