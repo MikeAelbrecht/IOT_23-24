@@ -1,6 +1,6 @@
 # https://github.com/bjarne-hansen/py-nrf24/blob/master/test/simple-sender.py
 
-import datetime
+from datetime import datetime
 import socket
 
 import struct
