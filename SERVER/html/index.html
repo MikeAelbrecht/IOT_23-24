@@ -50,9 +50,9 @@
 
 <script>
   function turnOnLightFunction() {
-    fetch('https://framboos20.local:3000/turnOnLight', 
+    fetch('http://framboos20.local:3000/turnOnLight', 
 	{
-		methode:'GET',
+		method:'GET',
 	})
       .then(response => response.json())
       .then(data => {
@@ -75,9 +75,9 @@
   }
 
   function turnOffLightFunction() {
-    fetch('https://framboos20.local:3000/turnOffLight',
+    fetch('http://framboos20.local:3000/turnOffLight',
 	{
-		methode:'GET',
+		method:'GET',
 	})
       .then(response => response.json())
       .then(data => {

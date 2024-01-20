@@ -84,10 +84,11 @@ if __name__ == "__main__":
     # ---- Setup NRF24L01 ----
     hostname = "framboos20.local"
     port = 8888
-    address = "1SNSR"
+    address = "1Node"
 
     print(f"Connecting to GPIO daemon on {hostname}:{port} ...")
     pi = pigpio.pi(hostname, port)
+
     if not pi.connected:
         print("Not connected to Raspberry Pi ... goodbye.")
         sys.exit()
@@ -100,6 +101,7 @@ if __name__ == "__main__":
         data_rate=RF24_DATA_RATE.RATE_250KBPS,
         pa_level=RF24_PA.LOW,
     )
+
     nrf.set_address_bytes(len(address))
     nrf.open_writing_pipe(address)
     nrf.open_reading_pipe(RF24_RX_ADDR.P1, address)
@@ -126,11 +128,12 @@ if __name__ == "__main__":
 
             handle_data(data)
 
-            response = "Hello from the server!"
+            response_body = "Hello from the server!"
+            response = f"HTTP/1.1 200 OK\nContent-Length: {len(response_body)}\nContent-Type: text/plain\nAccess-Control-Allow-Origin: *\n\n{response_body}".encode()
             client_socket.sendall(response.encode("utf-8"))
 
             client_socket.close()
         except BlockingIOError:
             pass
 
-        receive_data()
+        # receive_data()
