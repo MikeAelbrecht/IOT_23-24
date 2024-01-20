@@ -16,7 +16,10 @@
 #define B_IADJ 10
 
 // NRF24L01+ radio connected to RP2040
+#define MISO_PIN 4
 #define CE_PIN 5
+#define SCK_PIN 6
+#define MOSI_PIN 7
 #define CSN_PIN 8
 
 // Function prototypes
@@ -25,6 +28,7 @@ bool isMotionDetected();
 // NRF24L01+ radio
 RF24 radio(CE_PIN, CSN_PIN);
 uint8_t address[][6] = { "1Node", "2Node" };
+arduino::MbedSPI _spi(MOSI_PIN, MISO_PIN, SCK_PIN);
 
 bool radioNumber = 1;
 bool role = false;  // true = TX role, false = RX role
@@ -37,6 +41,7 @@ PayloadStruct payload;
 
 void setup() {
   Serial.begin(115200);
+  _spi.begin();
 
   while (!Serial) {
     // some boards need to wait to ensure access to serial over USB
@@ -57,7 +62,7 @@ void setup() {
   payload.message[6] = 0;
 
   // Setup 
-  if (!radio.begin()) {
+  if (!radio.begin(&_spi)) {
     Serial.println(F("radio hardware is not responding!!"));
     while (1) {}  // hold in infinite loop
   }
