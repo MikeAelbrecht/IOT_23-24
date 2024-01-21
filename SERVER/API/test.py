@@ -1,7 +1,9 @@
 # https://github.com/bjarne-hansen/py-nrf24/blob/master/test/simple-sender.py
 
 from datetime import datetime
-import socket
+
+from flask import Flask
+from flask_cors import CORS
 
 import struct
 import sys
@@ -11,23 +13,49 @@ import traceback
 import pigpio
 from nrf24 import *
 
+import mysql.connector
 
-def handle_data(data) -> None:
-    print("Received data:", data)
 
-    if "/turnOnLight" in data:
-        print("Turning on light...")
-        send_data(1)
-    elif "/turnOffLight" in data:
-        print("Turning off light...")
-        send_data(0)
+app = Flask(__name__)
+CORS(app)
 
+database = mysql.connector.connect(
+    host="localhost",
+    user="iot",
+    password="iot",
+    database="iot"
+)
+
+cursor = database.cursor()
+
+
+def insert_data():
+    query = "INSERT INTO waarden (datum, tijd) VALUES (%s, %s)"
+    values = (datetime.datetime.now().date(), datetime.datetime.now().time())
+
+    cursor.execute(query, values)
+
+    database.commit()
+
+@app.route('/turnOnLight', methods=['GET'])
+def turn_on_light():
+    print("Turning on light...")
+    send_data(1)
+    # Your script logic here
+    return "Light turned on"
+
+@app.route('/turnOffLight', methods=['GET'])
+def turn_off_light():
+    print("Turning off light...")
+    send_data(0)
+    # Your script logic here
+    return "Light turned off"        
 
 def send_data(data: int) -> None:
     try:
-        print(f"Send to {address}")
+        print(f"Send to {send_address}")
 
-        payload = struct.pack("<Bff", 0x01, data)
+        payload = struct.pack("i", data)
 
         nrf.reset_packages_lost()
         nrf.send(payload)
@@ -51,7 +79,7 @@ def send_data(data: int) -> None:
 
 def receive_data() -> None:
     try:
-        print(f"Receive from {address}")
+        print(f"Receive from {receive_address}")
 
         while nrf.data_ready:
             now = datetime.now()
@@ -67,13 +95,14 @@ def receive_data() -> None:
                 f"{now:%Y-%m-%d %H:%M:%S.%f}: pipe: {pipe}, len: {len(payload)}, bytes: {hex}"
             )
 
+            # TODO: Insert data into database
+
             if len(payload) > 0:
-                values = struct.unpack("<Bff", payload)
-                print(f"Protocol: {values[0]}, data: {values[0]}")
+                values = struct.unpack("i", payload)
+                print(f"data: {values[0]}")
 
             # Sleep 100 ms.
             time.sleep(0.1)
-
     except:
         traceback.print_exc()
         nrf.power_down()
@@ -84,10 +113,12 @@ if __name__ == "__main__":
     # ---- Setup NRF24L01 ----
     hostname = "framboos20.local"
     port = 8888
-    address = "1SNSR"
+    send_address = "1Node"
+    receive_address = "2Node"
 
     print(f"Connecting to GPIO daemon on {hostname}:{port} ...")
     pi = pigpio.pi(hostname, port)
+
     if not pi.connected:
         print("Not connected to Raspberry Pi ... goodbye.")
         sys.exit()
@@ -100,37 +131,16 @@ if __name__ == "__main__":
         data_rate=RF24_DATA_RATE.RATE_250KBPS,
         pa_level=RF24_PA.LOW,
     )
-    nrf.set_address_bytes(len(address))
-    nrf.open_writing_pipe(address)
-    nrf.open_reading_pipe(RF24_RX_ADDR.P1, address)
+
+    nrf.set_address_bytes(len(send_address))
+    nrf.open_writing_pipe(send_address)
+    nrf.open_reading_pipe(RF24_RX_ADDR.P1, receive_address)
 
     nrf.show_registers()
 
-    # ---- Setup API ----
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-    # server_address = ('framboos20.local', 3000)
-    server_address = ("localhost", 3000)
-    sock.bind(server_address)
-
-    sock.listen(1)
-    sock.setblocking(False)
+    app.run(host='0.0.0.0', port=3000)
 
     print("Server is listening on port 3000...")
 
     while True:
-        try:
-            client_socket, client_address = sock.accept()
-
-            data = client_socket.recv(1024).decode("utf-8")
-
-            handle_data(data)
-
-            response = "Hello from the server!"
-            client_socket.sendall(response.encode("utf-8"))
-
-            client_socket.close()
-        except BlockingIOError:
-            pass
-
         receive_data()
