@@ -1,7 +1,9 @@
 # https://github.com/bjarne-hansen/py-nrf24/blob/master/test/simple-sender.py
 
 from datetime import datetime
-import socket
+
+from flask import Flask
+from flask_cors import CORS
 
 import struct
 import sys
@@ -12,22 +14,29 @@ import pigpio
 from nrf24 import *
 
 
-def handle_data(data) -> None:
-    print("Received data:", data)
+app = Flask(__name__)
+CORS(app)
 
-    if "/turnOnLight" in data:
-        print("Turning on light...")
-        send_data(1)
-    elif "/turnOffLight" in data:
-        print("Turning off light...")
-        send_data(0)
 
+@app.route('/turnOnLight', methods=['GET'])
+def turn_on_light():
+    print("Turning on light...")
+    send_data(1)
+    # Your script logic here
+    return "Light turned on"
+
+@app.route('/turnOffLight', methods=['GET'])
+def turn_off_light():
+    print("Turning off light...")
+    send_data(0)
+    # Your script logic here
+    return "Light turned off"        
 
 def send_data(data: int) -> None:
     try:
         print(f"Send to {address}")
 
-        payload = struct.pack("<Bff", 0x01, data)
+        payload = struct.pack("<Bf", 0x01, data)
 
         nrf.reset_packages_lost()
         nrf.send(payload)
@@ -68,7 +77,7 @@ def receive_data() -> None:
             )
 
             if len(payload) > 0:
-                values = struct.unpack("<Bff", payload)
+                values = struct.unpack("<Bf", payload)
                 print(f"Protocol: {values[0]}, data: {values[0]}")
 
             # Sleep 100 ms.
@@ -108,32 +117,10 @@ if __name__ == "__main__":
 
     nrf.show_registers()
 
-    # ---- Setup API ----
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-    # server_address = ('framboos20.local', 3000)
-    server_address = ("localhost", 3000)
-    sock.bind(server_address)
-
-    sock.listen(1)
-    sock.setblocking(False)
+    app.run(host='0.0.0.0', port=3000)
 
     print("Server is listening on port 3000...")
 
     while True:
-        try:
-            client_socket, client_address = sock.accept()
-
-            data = client_socket.recv(1024).decode("utf-8")
-
-            handle_data(data)
-
-            response_body = "Hello from the server!"
-            response = f"HTTP/1.1 200 OK\nContent-Length: {len(response_body)}\nContent-Type: text/plain\nAccess-Control-Allow-Origin: *\n\n{response_body}".encode()
-            client_socket.sendall(response.encode("utf-8"))
-
-            client_socket.close()
-        except BlockingIOError:
-            pass
-
+        pass
         # receive_data()
