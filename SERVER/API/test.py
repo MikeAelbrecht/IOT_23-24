@@ -13,10 +13,29 @@ import traceback
 import pigpio
 from nrf24 import *
 
+import mysql.connector
+
 
 app = Flask(__name__)
 CORS(app)
 
+database = mysql.connector.connect(
+    host="localhost",
+    user="iot",
+    password="iot",
+    database="iot"
+)
+
+cursor = database.cursor()
+
+
+def insert_data():
+    query = "INSERT INTO waarden (datum, tijd) VALUES (%s, %s)"
+    values = (datetime.datetime.now().date(), datetime.datetime.now().time())
+
+    cursor.execute(query, values)
+
+    database.commit()
 
 @app.route('/turnOnLight', methods=['GET'])
 def turn_on_light():
@@ -34,9 +53,9 @@ def turn_off_light():
 
 def send_data(data: int) -> None:
     try:
-        print(f"Send to {address}")
+        print(f"Send to {send_address}")
 
-        payload = struct.pack("<Bf", 0x01, data)
+        payload = struct.pack("i", data)
 
         nrf.reset_packages_lost()
         nrf.send(payload)
@@ -60,7 +79,7 @@ def send_data(data: int) -> None:
 
 def receive_data() -> None:
     try:
-        print(f"Receive from {address}")
+        print(f"Receive from {receive_address}")
 
         while nrf.data_ready:
             now = datetime.now()
@@ -76,13 +95,14 @@ def receive_data() -> None:
                 f"{now:%Y-%m-%d %H:%M:%S.%f}: pipe: {pipe}, len: {len(payload)}, bytes: {hex}"
             )
 
+            # TODO: Insert data into database
+
             if len(payload) > 0:
-                values = struct.unpack("<Bf", payload)
-                print(f"Protocol: {values[0]}, data: {values[0]}")
+                values = struct.unpack("i", payload)
+                print(f"data: {values[0]}")
 
             # Sleep 100 ms.
             time.sleep(0.1)
-
     except:
         traceback.print_exc()
         nrf.power_down()
@@ -93,7 +113,8 @@ if __name__ == "__main__":
     # ---- Setup NRF24L01 ----
     hostname = "framboos20.local"
     port = 8888
-    address = "1Node"
+    send_address = "1Node"
+    receive_address = "2Node"
 
     print(f"Connecting to GPIO daemon on {hostname}:{port} ...")
     pi = pigpio.pi(hostname, port)
@@ -111,9 +132,9 @@ if __name__ == "__main__":
         pa_level=RF24_PA.LOW,
     )
 
-    nrf.set_address_bytes(len(address))
-    nrf.open_writing_pipe(address)
-    nrf.open_reading_pipe(RF24_RX_ADDR.P1, address)
+    nrf.set_address_bytes(len(send_address))
+    nrf.open_writing_pipe(send_address)
+    nrf.open_reading_pipe(RF24_RX_ADDR.P1, receive_address)
 
     nrf.show_registers()
 
@@ -122,5 +143,4 @@ if __name__ == "__main__":
     print("Server is listening on port 3000...")
 
     while True:
-        pass
-        # receive_data()
+        receive_data()
