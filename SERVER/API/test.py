@@ -40,36 +40,45 @@ def insert_data():
 @app.route('/turnOnLight', methods=['GET'])
 def turn_on_light():
     print("Turning on light...")
-    send_data(1)
+
+    resp = False
+    while not resp:
+        resp = send_data(1)
     # Your script logic here
     return "Light turned on"
 
 @app.route('/turnOffLight', methods=['GET'])
 def turn_off_light():
     print("Turning off light...")
-    send_data(0)
+
+    resp = False
+    while not resp:
+        resp = send_data(0)
     # Your script logic here
     return "Light turned off"        
 
-def send_data(data: int) -> None:
+def send_data(data: int) -> bool:
     try:
-        print(f"Send to {send_address}")
-
         payload = struct.pack("i", data)
 
         nrf.reset_packages_lost()
         nrf.send(payload)
+
         try:
             nrf.wait_until_sent()
         except TimeoutError:
             print("Timeout waiting for transmission to complete.")
 
+        time.sleep(0.1)
+
         if nrf.get_packages_lost() == 0:
             print(
                 f"Success: lost={nrf.get_packages_lost()}, retries={nrf.get_retries()}"
             )
+            return True
         else:
             print(f"Error: lost={nrf.get_packages_lost()}, retries={nrf.get_retries()}")
+            return False
 
     except:
         traceback.print_exc()
@@ -79,8 +88,6 @@ def send_data(data: int) -> None:
 
 def receive_data() -> None:
     try:
-        print(f"Receive from {receive_address}")
-
         while nrf.data_ready:
             now = datetime.now()
 
@@ -88,14 +95,12 @@ def receive_data() -> None:
             pipe = nrf.data_pipe()
             payload = nrf.get_payload()
 
-            hex = ":".join(f"{i:02x}" for i in payload)
-
-            # Show message received as hex.
+            # # Show message received as hex.
             print(
-                f"{now:%Y-%m-%d %H:%M:%S.%f}: pipe: {pipe}, len: {len(payload)}, bytes: {hex}"
+                f"{now:%Y-%m-%d %H:%M:%S}: pipe: {pipe}, len: {len(payload)} bytes"
             )
 
-            # TODO: Insert data into database
+            # # TODO: Insert data into database
 
             if len(payload) > 0:
                 values = struct.unpack("i", payload)
@@ -113,8 +118,8 @@ if __name__ == "__main__":
     # ---- Setup NRF24L01 ----
     hostname = "framboos20.local"
     port = 8888
-    send_address = "1Node"
-    receive_address = "2Node"
+    
+    pipes = (b"\xe1\xf0\xf0\xf0\xf0", b"\xd2\xf0\xf0\xf0\xf0")
 
     print(f"Connecting to GPIO daemon on {hostname}:{port} ...")
     pi = pigpio.pi(hostname, port)
@@ -126,21 +131,26 @@ if __name__ == "__main__":
     nrf = NRF24(
         pi,
         ce=25,
-        payload_size=RF24_PAYLOAD.DYNAMIC,
-        channel=100,
+        payload_size=4,
+        channel=46,
         data_rate=RF24_DATA_RATE.RATE_250KBPS,
-        pa_level=RF24_PA.LOW,
+        pa_level=RF24_PA.HIGH
     )
 
-    nrf.set_address_bytes(len(send_address))
-    nrf.open_writing_pipe(send_address)
-    nrf.open_reading_pipe(RF24_RX_ADDR.P1, receive_address)
+    # nrf.set_address_bytes(len(send_address))
+    nrf.open_writing_pipe(pipes[1])
+    nrf.open_reading_pipe(RF24_RX_ADDR.P1, pipes[0])
 
-    nrf.show_registers()
+    # nrf.show_registers()
 
     app.run(host='0.0.0.0', port=3000)
 
     print("Server is listening on port 3000...")
-
-    while True:
-        receive_data()
+    try:
+        while True:
+            receive_data()
+            # send_data(1)
+            # time.sleep(1)
+    except KeyboardInterrupt:
+        print("Keyboard interrupt detected ... goodbye.")
+        pi.stop()
