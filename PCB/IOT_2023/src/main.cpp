@@ -48,24 +48,28 @@ void setup() {
   }
   Serial.println("IOT_2023 project startup....");
 
-  pinMode(LED_R, OUTPUT);
-  pinMode(LED_G, OUTPUT);
-  pinMode(LED_B, OUTPUT);
+  // pinMode(LED_R, OUTPUT);
+  // pinMode(LED_G, OUTPUT);
+  // pinMode(LED_B, OUTPUT);
 
   pinMode(PIR_IN, INPUT);
 
   pinMode(B_EN, OUTPUT);
   pinMode(B_IADJ, OUTPUT);
 
-  digitalWrite(LED_R, HIGH);
+  // digitalWrite(LED_R, HIGH);
 
   payload.message[6] = 0;
 
   // Setup 
   if (!radio.begin(&_spi)) {
     Serial.println(F("radio hardware is not responding!!"));
-    while (1) {}  // hold in infinite loop
+    while (1) {
+      Serial.println(F("radio hardware is not responding!!"));
+    }  // hold in infinite loop
   }
+
+  while (1) { Serial.println("Here"); }
 
   radio.setPALevel(RF24_PA_LOW);  // RF24_PA_MAX is default.
   radio.enableDynamicPayloads();
@@ -73,14 +77,16 @@ void setup() {
   radio.openWritingPipe(address[radioNumber]);
   radio.openReadingPipe(1, address[!radioNumber]);
 
-  digitalWrite(LED_R, LOW);
-  digitalWrite(LED_G, HIGH);
+  // digitalWrite(LED_R, LOW);
+  // digitalWrite(LED_G, HIGH);
 
   Serial.println("IOT_2023 project startup complete");
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
+  Serial.println("Checking for motion or radio messages");
+
   if (isMotionDetected()) {
     digitalWrite(LED_B, HIGH);
 
