@@ -8,4 +8,3 @@
 > - Database entry with a timestamp of the moment the data was received. (Local and cloud database)
 > - Web-GUI to see all database entries.
 > - Possibilty to send data to the RP2040. (Specific for the project)
-> - Authentication and SSL on teh web-GUI.
