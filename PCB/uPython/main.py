@@ -25,23 +25,19 @@ SCK_PIN = Pin(6)
 MOSI_PIN = Pin(7)
 CSN_PIN = Pin(8)
 
-# Responder pause between receiving data and checking for further packets.
 _RX_POLL_DELAY = const(15)
-# Responder pauses an additional _RESPONER_SEND_DELAY ms after receiving data and before
-# transmitting to allow the (remote) initiator time to get into receive mode. The
-# initiator may be a slow device. Value tested with Pyboard, ESP32 and ESP8266.
 _RESPONDER_SEND_DELAY = const(10)
 
 # NRF24L01 radio configuration
 print("Initializing NRF24L01 radio...")
 spi = SPI(0, sck=SCK_PIN, mosi=MOSI_PIN, miso=MISO_PIN)
-nrf = NRF24L01(spi, CSN_PIN, CE_PIN, channel=100)
+nrf = NRF24L01(spi, CSN_PIN, CE_PIN, payload_size=4)
 
-own_address = b"1Node"
-remote_address = b"2Node"
+pipes = (b"\xe1\xf0\xf0\xf0\xf0", b"\xd2\xf0\xf0\xf0\xf0")
 
-nrf.open_tx_pipe(own_address)
-nrf.open_rx_pipe(1, remote_address)
+nrf.open_tx_pipe(pipes[0])
+nrf.open_rx_pipe(1, pipes[1])
+
 print("NRF24L01 radio initialized")
 
 
@@ -51,6 +47,7 @@ def is_motion_detected():
 
 def send_data(data):
     nrf.stop_listening()
+    print("sending data: ", data)
 
     try:
         data = struct.pack("i", data)
@@ -75,12 +72,13 @@ def receive_data():
         utime.sleep_ms(_RESPONDER_SEND_DELAY)
         nrf.stop_listening()
 
-        try:
-            nrf.send(struct.pack("i", 1))
-        except OSError:
-            pass
+        # try:
+        #     nrf.send(struct.pack("i", 1))
+        # except OSError:
+        #     pass
 
-        print("sent response")
+        # print("sent response")
+        # utime.sleep_ms(_RESPONDER_SEND_DELAY)
         nrf.start_listening()
 
 
