@@ -1,4 +1,4 @@
-# IOT_2023
+# IOT: Embedded Linux
 
 > What will it do:
 >
