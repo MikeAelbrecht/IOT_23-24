@@ -3,6 +3,7 @@ import utime
 from machine import Pin, SPI
 from nrf24l01 import NRF24L01
 from micropython import const
+import asyncio
 
 # RGB led connected to RP2040
 LED_R = Pin(0, Pin.OUT)
@@ -37,25 +38,26 @@ pipes = (b"\xe1\xf0\xf0\xf0\xf0", b"\xd2\xf0\xf0\xf0\xf0")
 nrf.open_tx_pipe(pipes[0])
 nrf.open_rx_pipe(1, pipes[1])
 
-# Sender
-# nrf.open_tx_pipe(pipes[1])
-# nrf.open_rx_pipe(1, pipes[0])
-
 print("NRF24L01 radio initialized")
 
+# Variable for the light
+light_master = False
 
-def is_motion_detected():
+
+def is_motion_detected() -> bool:
     return PIR_IN.value() == 1
 
 
-def send_data(data):
+async def turn_on_light(duration: int) -> None:
+    if not light_master:
+        LED_B.value(1)
+        await asyncio.sleep(duration)
+        LED_B.value(0)
+
+
+def send_data(data) -> None:
     nrf.stop_listening()
     print("Sending data:", data)
-
-    # Blink blue LED to indicate data transmission
-    LED_B.value(1)
-    utime.sleep_ms(100)
-    LED_B.value(0)
 
     try:
         data = struct.pack("i", data)
@@ -85,7 +87,8 @@ def send_data(data):
         print("Received response:", data)
 
 
-def receive_data():
+def receive_data() -> None:
+    global light_master
     if nrf.any():
         print("Received data")
 
@@ -95,6 +98,7 @@ def receive_data():
             print("Received:", data)
 
             LED_B.value(data)
+            light_master = True
 
             utime.sleep_ms(_RX_POLL_DELAY)
 
@@ -121,11 +125,7 @@ if __name__ == "__main__":
     while True:
         receive_data()
 
-        # send_data(1)
-        # utime.sleep(2)
-        # send_data(0)
-        # utime.sleep(2)
-
         if is_motion_detected():
             print("motion detected")
             send_data(1)
+            asyncio.run(turn_on_light(5))
