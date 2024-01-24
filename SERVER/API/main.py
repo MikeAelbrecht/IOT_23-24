@@ -1,5 +1,3 @@
-# https://github.com/bjarne-hansen/py-nrf24/blob/master/test/simple-sender.py
-
 from datetime import datetime
 
 from flask import Flask
@@ -150,8 +148,6 @@ if __name__ == "__main__":
     try:
         while True:
             receive_data()
-            # send_data(1)
-            # time.sleep(1)
     except KeyboardInterrupt:
         print("Keyboard interrupt detected ... goodbye.")
         pi.stop()
