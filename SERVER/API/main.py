@@ -42,7 +42,6 @@ def turn_on_light():
     resp = False
     while not resp:
         resp = send_data(1)
-    # Your script logic here
     return "Light turned on"
 
 @app.route('/turnOffLight', methods=['GET'])
@@ -52,7 +51,6 @@ def turn_off_light():
     resp = False
     while not resp:
         resp = send_data(0)
-    # Your script logic here
     return "Light turned off"        
 
 def send_data(data: int) -> bool:
@@ -93,7 +91,6 @@ def receive_data() -> None:
             pipe = nrf.data_pipe()
             payload = nrf.get_payload()
 
-            # # Show message received as hex.
             print(
                 f"{now:%Y-%m-%d %H:%M:%S}: pipe: {pipe}, len: {len(payload)} bytes"
             )

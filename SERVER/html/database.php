@@ -38,12 +38,6 @@
           </tr>
         </thead>
         <tbody>
-          <!-- for loop 
-          <tr>
-            <td>Date</td>
-            <td>timestamp</td>
-          </tr>
-          -->
           <?php
           require_once("../DATABASE/database.php");
           foreach (get_data() as $row)
