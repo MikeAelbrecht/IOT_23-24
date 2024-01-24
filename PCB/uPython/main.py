@@ -126,6 +126,6 @@ if __name__ == "__main__":
         # send_data(0)
         # utime.sleep(2)
 
-        # if is_motion_detected():
-        #     print("motion detected")
-        #     send_data(1)
+        if is_motion_detected():
+            print("motion detected")
+            send_data(1)
